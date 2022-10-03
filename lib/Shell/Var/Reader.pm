@@ -3,6 +3,7 @@ package Shell::Var::Reader;
 use 5.006;
 use strict;
 use warnings;
+use File::Slurp qw(read_file);
 
 =head1 NAME
 
@@ -10,12 +11,11 @@ Shell::Var::Reader - The great new Shell::Var::Reader!
 
 =head1 VERSION
 
-Version 0.01
+Version 0.0.1
 
 =cut
 
-our $VERSION = '0.01';
-
+our $VERSION = '0.0.1';
 
 =head1 SYNOPSIS
 
@@ -28,10 +28,6 @@ Perhaps a little code snippet.
     my $foo = Shell::Var::Reader->new();
     ...
 
-=head1 EXPORT
-
-A list of functions that can be exported.  You can delete this section
-if you don't export anything, such as for a purely object-oriented module.
 
 =head1 SUBROUTINES/METHODS
 
@@ -39,14 +35,53 @@ if you don't export anything, such as for a purely object-oriented module.
 
 =cut
 
-sub function1 {
-}
+sub read_in_shell_vars {
+	my $file = $_[1];
 
-=head2 function2
+	if ( !defined($file) ) {
+		die('No file specified');
+	}
 
-=cut
+	if ( !-f $file ) {
+		die( '"' . $file . '" does not exist or is not a file' );
+	}
 
-sub function2 {
+	# figure out if we are using bash or not
+	my $raw_file  = read_file($file) or die 'Failed to read "' . $file . '"';
+	my @raw_split = split( /\n/, $raw_file );
+	my $shell      = 'sh';
+	if ( defined( $raw_split[0] ) && ( $raw_split[0] =~ /^\#\!.*bash/ ) ) {
+		$shell='bash';
+	}
+
+	#
+	# figure out what variables already exist...
+	#
+	my $cmd=$shell." -c 'if [ -z \"\$BASH_VERSION\" ]; then set; else set -o posix; set; fi'";
+	my $results=`$cmd`;
+	my $base_vars={};
+	my @results_split=split(/\n/, $results);
+	foreach my $line (@results_split) {
+		if ($line =~ /^[\_a-zA-Z]+[\_a-zA-Z0-9]\=/) {
+			my @line_split=split(/=/,$line, 2);
+			$base_vars->{$line_split[0]}=1;
+		}
+	}
+
+	#
+	# Figure out what has been set
+	#
+	$ENV{ShellVarReaderFile}=$file;
+	$cmd=$shell." -c ' \"\$ShellVarReaderFile\" if [ -z \"\$BASH_VERSION\" ]; then set; else set -o posix; set; fi'";
+	$results=`$cmd`;
+	my $found_vars={};
+	@results_split=split(/\n/, $results);
+	foreach my $line (@results_split) {
+		if ($line =~ /^[\_a-zA-Z]+[\_a-zA-Z0-9]\=/) {
+			my @line_split=split(/=/,$line, 2);
+		}
+	}
+
 }
 
 =head1 AUTHOR
@@ -102,4 +137,4 @@ This is free software, licensed under:
 
 =cut
 
-1; # End of Shell::Var::Reader
+1;    # End of Shell::Var::Reader
