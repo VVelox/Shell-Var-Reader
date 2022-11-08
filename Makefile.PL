@@ -4,13 +4,13 @@ use warnings;
 use ExtUtils::MakeMaker;
 
 my %WriteMakefileArgs = (
-	NAME          => 'Shell::Var::Reader',
-	AUTHOR        => q{Zane C. Bowers-Hadley <vvelox@vvelox.net>},
-	VERSION_FROM  => 'lib/Shell/Var/Reader.pm',
-	ABSTRACT_FROM => 'lib/Shell/Var/Reader.pm',
-	LICENSE       => 'artistic_2',
-	INST_SCRIPT   => 'bin',
-
+	NAME               => 'Shell::Var::Reader',
+	AUTHOR             => q{Zane C. Bowers-Hadley <vvelox@vvelox.net>},
+	VERSION_FROM       => 'lib/Shell/Var/Reader.pm',
+	ABSTRACT_FROM      => 'lib/Shell/Var/Reader.pm',
+	LICENSE            => 'artistic_2',
+	INST_SCRIPT        => 'bin',
+	EXE_FILES          => ['src_bin/shell_var_reader'],
 	MIN_PERL_VERSION   => '5.006',
 	CONFIGURE_REQUIRES => {
 		'ExtUtils::MakeMaker' => '0',

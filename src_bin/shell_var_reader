@@ -1,4 +1,4 @@
-#!/usr/bin/env perl
+#!perl
 
 my $version = '0.0.1';
 
@@ -13,8 +13,8 @@ use Data::Dumper;
 
 my $to_read;
 my $format = 'json';
-my $pretty=0;
-my $sort=0;
+my $pretty = 0;
+my $sort   = 0;
 my $version_flag;
 my $help;
 GetOptions(
@@ -50,33 +50,36 @@ if ($help) {
 	exit 255;
 }
 
-if (!defined($to_read)) {
+if ( !defined($to_read) ) {
 	die('No file specified to read via -r');
 }
 
-if ($format ne 'json' && $format ne 'yaml' && $format ne 'toml' && $format ne 'dumper') {
-	die("'".$format."' is not a recognized format");
+if ( $format ne 'json' && $format ne 'yaml' && $format ne 'toml' && $format ne 'dumper' ) {
+	die( "'" . $format . "' is not a recognized format" );
 }
 
-my $found_vars=Shell::Var::Reader->read_in($to_read);
+my $found_vars = Shell::Var::Reader->read_in($to_read);
 
 # print in the requested format
-if ($format eq 'toml') {
+if ( $format eq 'toml' ) {
 	print to_toml($found_vars);
-}elsif ($format eq 'yaml') {
-	if (!$sort) {
-		$YAML::SortKeys=0;
+}
+elsif ( $format eq 'yaml' ) {
+	if ( !$sort ) {
+		$YAML::SortKeys = 0;
 	}
 	print Dump($found_vars);
-}elsif ($format eq 'json') {
-	my $json=JSON->new;
+}
+elsif ( $format eq 'json' ) {
+	my $json = JSON->new;
 	$json->canonical($sort);
 	$json->pretty($pretty);
 	print $json->encode($found_vars);
-	if (!$pretty) {
+	if ( !$pretty ) {
 		print "\n";
 	}
-}elsif ($format eq 'dumper') {
+}
+elsif ( $format eq 'dumper' ) {
 	print Dumper($found_vars);
 }
 
