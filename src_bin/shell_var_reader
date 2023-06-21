@@ -1,16 +1,18 @@
 #!perl
 
-my $version = '0.1.0';
-
 use strict;
 use warnings;
 use Shell::Var::Reader;
-use TOML qw(to_toml);
-use JSON qw(to_json);
-use YAML;
+use TOML         qw(to_toml from_toml);
+use JSON         qw(to_json decode_json);
+use YAML         qw(Load);
 use Getopt::Long qw(:config pass_through);
 use Data::Dumper;
 use String::ShellQuote;
+use Hash::Merge;
+use File::Slurp;
+
+my $version = '0.2.0';
 
 my $to_read;
 my $format = 'json';
@@ -18,6 +20,7 @@ my $pretty = 0;
 my $sort   = 0;
 my $version_flag;
 my $help;
+my @includes;
 GetOptions(
 	'r=s'     => \$to_read,
 	'o=s'     => \$format,
@@ -27,7 +30,7 @@ GetOptions(
 	'help'    => \$help,
 	'v'       => \$version_flag,
 	'version' => \$version_flag,
-
+	'i=s'     => \@includes,
 );
 
 if ($version_flag) {
@@ -44,34 +47,84 @@ if ($help) {
               Formats: json,yaml,toml,dumper(Data::Dumper),shell
 -p            Pretty print
 -s            Sort
+-i <include>  Include file info. May be used multiple times.
 
 -h/--help     Help
 -v/--version  Version
+
+
+Include Examples...
+-i foo,bar.json       Read in bar.json and include it as the variable foo.
+-i foo.toml           Read in foo.toml and merge it with what it is being merged into taking presidence.
+-i a.jsom -i b.toml   Read in a.json and merge it, then read in in b.json and merge it.
+
 ';
 	exit 255;
-}
+} ## end if ($help)
 
 if ( !defined($to_read) ) {
 	die('No file specified to read via -r');
 }
 
-if ( $format ne 'json' && $format ne 'yaml' && $format ne 'toml' && $format ne 'dumper' && $format ne 'shell') {
+if ( $format ne 'json' && $format ne 'yaml' && $format ne 'toml' && $format ne 'dumper' && $format ne 'shell' ) {
 	die( "'" . $format . "' is not a recognized format" );
 }
 
 my $found_vars = Shell::Var::Reader->read_in($to_read);
 
+my $merger = Hash::Merge->new('LEFT_PRECEDENT');
+foreach my $include (@includes) {
+	my ( $include_as, $include_file ) = split( /,/, $include, 2 );
+	my $merge = 0;
+	if ( !defined($include_file) ) {
+		$include_file = $include_as;
+		$merge        = 1;
+	}
+
+	my $raw_include = read_file($include_file) || die( 'Failed to read "' . $include_file . '"' );
+
+	my $parsed_include;
+
+	if ( $include_file =~ /[Jj][Ss][Oo][Nn]$/ ) {
+		eval { $parsed_include = decode_json($raw_include); };
+		if ($@) {
+			die( 'Parsing "' . $include_file . '" failed... ' . $@ );
+		}
+	} elsif ( $include_file =~ /([Yy][Mm][Ll]|[Yy][Aa][Mm][Ll])$/ ) {
+		eval { $parsed_include = Load($raw_include); };
+		if ($@) {
+			die( 'Parsing "' . $include_file . '" failed... ' . $@ );
+		}
+	} elsif ( $include_file =~ /[Tt][Oo][Mm][Ll]$/ ) {
+		eval {
+			my $err;
+			( $parsed_include, $err ) = from_toml($raw_include);
+			unless ($parsed_include) {
+				die($err);
+			}
+		};
+		if ($@) {
+			die( 'Parsing "' . $include_file . '" failed... ' . $@ );
+		}
+	} ## end elsif ( $include_file =~ /[Tt][Oo][Mm][Ll]$/ )
+
+	if ($merge) {
+		my %tmp_hash = %{ $merger->merge( $found_vars, $parsed_include ) };
+		$found_vars = \%tmp_hash;
+	} else {
+		$found_vars->{$include_as} = $parsed_include;
+	}
+} ## end foreach my $include (@includes)
+
 # print in the requested format
 if ( $format eq 'toml' ) {
 	print to_toml($found_vars);
-}
-elsif ( $format eq 'yaml' ) {
+} elsif ( $format eq 'yaml' ) {
 	if ( !$sort ) {
 		$YAML::SortKeys = 0;
 	}
 	print Dump($found_vars);
-}
-elsif ( $format eq 'json' ) {
+} elsif ( $format eq 'json' ) {
 	my $json = JSON->new;
 	$json->canonical($sort);
 	$json->pretty($pretty);
@@ -79,11 +132,9 @@ elsif ( $format eq 'json' ) {
 	if ( !$pretty ) {
 		print "\n";
 	}
-}
-elsif ( $format eq 'dumper' ) {
+} elsif ( $format eq 'dumper' ) {
 	print Dumper($found_vars);
-}
-elsif ( $format eq 'shell' ) {
+} elsif ( $format eq 'shell' ) {
 	my @keys = keys( %{$found_vars} );
 	foreach my $key (@keys) {
 		print $key. '=' . shell_quote( $found_vars->{$key} ) . "\n";
@@ -121,5 +172,25 @@ Pretty print. Not relevant to all outputs.
 =head2 -s
 
 Sort. Not relevant to all outputs.
+
+=head2 -i <include>
+
+Files to parse and include in the produced JSON, TOML, or YAML.
+
+The included file may be either JSON, TOML, or YAML.
+
+If a comma is included, everything before the comma is used as the
+key name to include the parsed data as. Otherwise it will me merged.
+
+Include Examples...
+
+    Read in bar.json and include it as the variable foo.
+    -i foo,bar.json
+
+    Read in foo.toml and merge it with what it is being merged into taking presidence.
+    -i foo.toml
+
+    Read in a.json and merge it, then read in in b.json and merge it.
+    -i a.jsom -i b.toml
 
 =cut

@@ -25,6 +25,7 @@ my %WriteMakefileArgs = (
 		'YAML'               => '0',
 		'Data::Dumper'       => '0',
 		'String::ShellQuote' => '0',
+		'Hash::Merge'        => '0',
 	},
 	dist       => { COMPRESS => 'gzip -9f', SUFFIX => 'gz', },
 	clean      => { FILES    => 'Shell-Var-Reader-*' },
