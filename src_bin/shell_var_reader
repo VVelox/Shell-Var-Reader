@@ -11,8 +11,11 @@ use Data::Dumper;
 use String::ShellQuote;
 use Hash::Merge;
 use File::Slurp;
+use JSON::Path;
+use Rex::CMDB;
+use Rex -feature => [qw/1.4/];
 
-my $version = '0.2.0';
+my $version = '0.3.0';
 
 my $to_read;
 my $format = 'json';
@@ -21,16 +24,24 @@ my $sort   = 0;
 my $version_flag;
 my $help;
 my @includes;
+my $tcmdb;
+my $cmdb_host;
+my $host_vars = "HOSTNAME,REX_NAME,REX_HOSTNAME,ANSIBLE_HOSTNAME,ANSIBLE_NAME,NAME";
+my $use_roles = 1;
 GetOptions(
-	'r=s'     => \$to_read,
-	'o=s'     => \$format,
-	'p'       => \$pretty,
-	's'       => \$sort,
-	'h'       => \$help,
-	'help'    => \$help,
-	'v'       => \$version_flag,
-	'version' => \$version_flag,
-	'i=s'     => \@includes,
+	'r=s'         => \$to_read,
+	'o=s'         => \$format,
+	'p'           => \$pretty,
+	's'           => \$sort,
+	'h'           => \$help,
+	'help'        => \$help,
+	'v'           => \$version_flag,
+	'version'     => \$version_flag,
+	'i=s'         => \@includes,
+	'tcmdb=s'     => \$tcmdb,
+	'cmdb_host=s' => \$cmdb_host,
+	'host_vars=s' => \$host_vars,
+	'use_roles=s' => \$use_roles
 );
 
 if ($version_flag) {
@@ -48,6 +59,16 @@ if ($help) {
 -p            Pretty print
 -s            Sort
 -i <include>  Include file info. May be used multiple times.
+
+--tcmdb <dir>       Optionally include data from a Rex TOML CMDB.
+--cmdb_host <host>  Hostname to use when querying the CMDB.
+                    Default :: undef
+--host_vars <vars>  If --cmdb_host is undef, check this comma seperated
+                    list JSON Paths in the currently found/included vars
+                    for the first possible hit.
+                    Default :: HOSTNAME,REX_NAME,REX_HOSTNAME,ANSIBLE_HOSTNAME,ANSIBLE_NAME,NAME
+--use_roles [01]    If roles should be used or not with the Rex TOML CMDB.
+                    Default :: 1
 
 -h/--help     Help
 -v/--version  Version
@@ -72,13 +93,20 @@ if ( $format ne 'json' && $format ne 'yaml' && $format ne 'toml' && $format ne '
 
 my $found_vars = Shell::Var::Reader->read_in($to_read);
 
-my $merger = Hash::Merge->new('LEFT_PRECEDENT');
+my $merger = Hash::Merge->new('RIGHT_PRECEDENT');
 foreach my $include (@includes) {
 	my ( $include_as, $include_file ) = split( /,/, $include, 2 );
 	my $merge = 0;
 	if ( !defined($include_file) ) {
 		$include_file = $include_as;
 		$merge        = 1;
+	}
+
+	# including something as cmdb and using --tcmdb are mutually exclusive
+	if ( $include_as eq 'cmdb' && defined($tcmdb) ) {
+		die(      '"cmdb" used with "'
+				. $include
+				. '" can not be included as it will be over written via included CMDB from --tcmdb' );
 	}
 
 	my $raw_include = read_file($include_file) || die( 'Failed to read "' . $include_file . '"' );
@@ -116,6 +144,49 @@ foreach my $include (@includes) {
 	}
 } ## end foreach my $include (@includes)
 
+if ( defined($tcmdb) ) {
+	if ( !-d $tcmdb ) {
+		die( '"' . $tcmdb . '" is not a directory or does not exist' );
+	}
+
+	# if this is not defined, check to see if it is set in shell conf that was read in
+	# or in any of the includes
+	if ( !defined($cmdb_host) ) {
+		# some basic cleanup of the hostname vars string
+		# to make sure we don't have anything empty for it
+		$host_vars =~ s/,[\ \t]*,/, /g;
+		$host_vars =~ s/^[\ \t]*,//g;
+		$host_vars =~ s/,[\ \t]*$//g;
+		if ( $host_vars eq '' ) {
+			die('--host_vars can not be set to ""');
+		}
+		# check the various possble values using jpath
+		foreach my $host_var ( split( /,/, $host_vars ) ) {
+			my $jpath    = JSON::Path->new($host_var);
+			my $hostname = $jpath->get($found_vars);
+			# if we found something not blank and have not set it already, set it
+			if ( defined($hostname) && $hostname ne '' && !defined($cmdb_host) ) {
+				$cmdb_host = $hostname;
+			}
+		}
+	} ## end if ( !defined($cmdb_host) )
+
+	# prevents Rex from printing out rex is exiting after the script ends
+	$::QUIET = 2;
+
+	set cmdb => {
+		type           => 'TOML',
+		path           => $tcmdb,
+		merge_behavior => 'LEFT_PRECEDENT',
+		use_roles      => $use_roles,
+	};
+
+	my $cmdb_vars = get cmdb( undef, $cmdb_host );
+
+	my %tmp_hash = %{ $merger->merge( $found_vars, $cmdb_vars ) };
+	$found_vars = \%tmp_hash;
+} ## end if ( defined($tcmdb) )
+
 # print in the requested format
 if ( $format eq 'toml' ) {
 	print to_toml($found_vars);
@@ -149,7 +220,7 @@ shell_var_reader - Read/run a shell script and return set variable in it.
 
 =head1 SYNOPSIS
 
-shell_var_reader B<-r> <file> [B<-o> <format>] [B<-p>] [B<-s>]
+shell_var_reader B<-r> <file> [B<-o> <format>] [B<-p>] [B<-s>] [B<--tcmdb> <dir>] [B<--cmdb_host> <host>] [B<--host_vars> <vars>] [B<--use_roles> [01]]
 
 =head1 FLAGS
 
@@ -192,5 +263,34 @@ Include Examples...
 
     Read in a.json and merge it, then read in in b.json and merge it.
     -i a.jsom -i b.toml
+
+=head1 CMDB FLAGS
+
+Includes data from a CMDB and merge it in. Will overwrite everything previous.
+
+=head2 --tcmdb <dir>
+
+Optionally include data from a Rex TOML CMDB. See L<Rex::CMDB::YAML> for more information
+on that.
+
+=head2 --cmdb_host <host>
+
+Hostname to use when querying the CMDB.
+
+Default :: undef
+
+=head2 --host_vars <vars>
+
+If --cmdb_host is undef, check this comma seperated list JSON Paths in the currently
+found/included vars for the first possible hit. For more info the path stuff, see
+L<JSON::Path>.
+
+Default :: HOSTNAME,REX_NAME,REX_HOSTNAME,ANSIBLE_HOSTNAME,ANSIBLE_NAME,NAME
+
+=head2 --use_roles [01]
+
+If roles should be used or not with the Rex TOML CMDB.
+
+Default :: 1
 
 =cut
