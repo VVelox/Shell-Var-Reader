@@ -14,8 +14,9 @@ use File::Slurp;
 use JSON::Path;
 use Rex::CMDB;
 use Rex -feature => [qw/1.4/];
+use Hash::Flatten;
 
-my $version = '0.3.0';
+my $version = '0.3.1';
 
 my $to_read;
 my $format = 'json';
@@ -189,25 +190,45 @@ if ( defined($tcmdb) ) {
 
 # print in the requested format
 if ( $format eq 'toml' ) {
-	print to_toml($found_vars);
+	my $to_print = to_toml($found_vars);
+	print $to_print;
 } elsif ( $format eq 'yaml' ) {
 	if ( !$sort ) {
 		$YAML::SortKeys = 0;
 	}
-	print Dump($found_vars);
+	my $to_print = Dump($found_vars);
+	print $to_print;
 } elsif ( $format eq 'json' ) {
 	my $json = JSON->new;
 	$json->canonical($sort);
 	$json->pretty($pretty);
-	print $json->encode($found_vars);
+	my $to_print = $json->encode($found_vars);
+	print $to_print;
 	if ( !$pretty ) {
 		print "\n";
 	}
 } elsif ( $format eq 'dumper' ) {
-	print Dumper($found_vars);
+	my $to_print = Dump($found_vars);
+	print $to_print;
 } elsif ( $format eq 'shell' ) {
+
+	my $escape = rand . rand . rand . rand;
+$escape =~ s/\.//g;
+	my $make_flat = Hash::Flatten->new(
+									   {
+										HashDelimiter  => '_',
+										ArrayDelimiter => '_',
+										EscapeSequence => $escape,
+										}
+									   );
+	$found_vars = $make_flat->flatten($found_vars);
+
 	my @keys = keys( %{$found_vars} );
+	if ($sort) {
+		@keys=sort(@keys);
+	}
 	foreach my $key (@keys) {
+		$key =~ s/$escape//g;
 		print $key. '=' . shell_quote( $found_vars->{$key} ) . "\n";
 	}
 }
