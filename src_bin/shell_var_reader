@@ -19,7 +19,7 @@ use Hash::Flatten;
 # prevents Rex from printing out rex is exiting after the script ends
 $::QUIET = 2;
 
-my $version = '0.3.1';
+my $version = '0.3.2';
 
 my $to_read;
 my $format = 'json';

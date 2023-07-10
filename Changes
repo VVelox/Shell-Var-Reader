@@ -1,5 +1,9 @@
 Revision history for Shell-Var-Reader
 
+0.3.2	 2023-07-10/11:30
+		 - Fix flattening for shell output.
+		 - Rework being quiet for Perl on some Linux systems when it comes to Rex.
+
 0.3.1	 2023-07-23/16:00
 		 - Flatten hashes/arrays for shell output.
 
