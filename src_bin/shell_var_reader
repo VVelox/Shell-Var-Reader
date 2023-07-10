@@ -16,6 +16,9 @@ use Rex::CMDB;
 use Rex -feature => [qw/1.4/];
 use Hash::Flatten;
 
+# prevents Rex from printing out rex is exiting after the script ends
+$::QUIET = 2;
+
 my $version = '0.3.1';
 
 my $to_read;
@@ -172,9 +175,6 @@ if ( defined($tcmdb) ) {
 		}
 	} ## end if ( !defined($cmdb_host) )
 
-	# prevents Rex from printing out rex is exiting after the script ends
-	$::QUIET = 2;
-
 	set cmdb => {
 		type           => 'TOML',
 		path           => $tcmdb,
@@ -228,8 +228,9 @@ $escape =~ s/\.//g;
 		@keys=sort(@keys);
 	}
 	foreach my $key (@keys) {
-		$key =~ s/$escape//g;
-		print $key. '=' . shell_quote( $found_vars->{$key} ) . "\n";
+		my $munged_key=$key;
+		$munged_key =~ s/$escape//g;
+		print $munged_key . '=' . shell_quote( $found_vars->{$key} ) . "\n";
 	}
 }
 
