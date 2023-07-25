@@ -19,7 +19,7 @@ use Hash::Flatten;
 # prevents Rex from printing out rex is exiting after the script ends
 $::QUIET = 2;
 
-my $version = '0.3.2';
+my $version = '0.4.0';
 
 my $to_read;
 my $format = 'json';
@@ -32,6 +32,7 @@ my $tcmdb;
 my $cmdb_host;
 my $host_vars = "HOSTNAME,REX_NAME,REX_HOSTNAME,ANSIBLE_HOSTNAME,ANSIBLE_NAME,NAME";
 my $use_roles = 1;
+my $munger_file;
 GetOptions(
 	'r=s'         => \$to_read,
 	'o=s'         => \$format,
@@ -45,7 +46,8 @@ GetOptions(
 	'tcmdb=s'     => \$tcmdb,
 	'cmdb_host=s' => \$cmdb_host,
 	'host_vars=s' => \$host_vars,
-	'use_roles=s' => \$use_roles
+	'use_roles=s' => \$use_roles,
+	'm=s'         => \$munger_file,
 );
 
 if ($version_flag) {
@@ -63,6 +65,7 @@ if ($help) {
 -p            Pretty print
 -s            Sort
 -i <include>  Include file info. May be used multiple times.
+-m <munger>   File containing code to use for munging data prior to output.
 
 --tcmdb <dir>       Optionally include data from a Rex TOML CMDB.
 --cmdb_host <host>  Hostname to use when querying the CMDB.
@@ -96,6 +99,12 @@ if ( $format ne 'json' && $format ne 'yaml' && $format ne 'toml' && $format ne '
 }
 
 my $found_vars = Shell::Var::Reader->read_in($to_read);
+
+##
+##
+## includes
+##
+##
 
 my $merger = Hash::Merge->new('RIGHT_PRECEDENT');
 foreach my $include (@includes) {
@@ -148,6 +157,12 @@ foreach my $include (@includes) {
 	}
 } ## end foreach my $include (@includes)
 
+##
+##
+## Rex TOML CMDB
+##
+##
+
 if ( defined($tcmdb) ) {
 	if ( !-d $tcmdb ) {
 		die( '"' . $tcmdb . '" is not a directory or does not exist' );
@@ -188,6 +203,40 @@ if ( defined($tcmdb) ) {
 	$found_vars = \%tmp_hash;
 } ## end if ( defined($tcmdb) )
 
+##
+##
+## munging
+##
+##
+
+if ( defined($munger_file) ) {
+	if ( !-f $munger_file ) {
+		die( '"' . $munger_file . '" specified as a munger file but it does not exist' );
+	}
+
+	my $munger;
+	eval {
+		$munger = read_file($munger_file);
+		if ( !defined($munger) ) {
+			die( 'rea_file("' . $munger_file . '") returned undef' );
+		}
+	};
+	if ($@) {
+		die( 'Failed to read munger file, "' . $munger_file . '"... ' . $@ );
+	}
+
+	eval($munger);
+	if ($@) {
+		die( 'eval($munger) died... ' . $@ );
+	}
+} ## end if ( defined($munger_file) )
+
+##
+##
+## output
+##
+##
+
 # print in the requested format
 if ( $format eq 'toml' ) {
 	my $to_print = to_toml($found_vars);
@@ -213,26 +262,26 @@ if ( $format eq 'toml' ) {
 } elsif ( $format eq 'shell' ) {
 
 	my $escape = rand . rand . rand . rand;
-$escape =~ s/\.//g;
+	$escape =~ s/\.//g;
 	my $make_flat = Hash::Flatten->new(
-									   {
-										HashDelimiter  => '_',
-										ArrayDelimiter => '_',
-										EscapeSequence => $escape,
-										}
-									   );
+		{
+			HashDelimiter  => '_',
+			ArrayDelimiter => '_',
+			EscapeSequence => $escape,
+		}
+	);
 	$found_vars = $make_flat->flatten($found_vars);
 
 	my @keys = keys( %{$found_vars} );
 	if ($sort) {
-		@keys=sort(@keys);
+		@keys = sort(@keys);
 	}
 	foreach my $key (@keys) {
-		my $munged_key=$key;
+		my $munged_key = $key;
 		$munged_key =~ s/$escape//g;
 		print $munged_key . '=' . shell_quote( $found_vars->{$key} ) . "\n";
 	}
-}
+} ## end elsif ( $format eq 'shell' )
 
 exit 0;
 
@@ -242,7 +291,7 @@ shell_var_reader - Read/run a shell script and return set variable in it.
 
 =head1 SYNOPSIS
 
-shell_var_reader B<-r> <file> [B<-o> <format>] [B<-p>] [B<-s>] [B<--tcmdb> <dir>] [B<--cmdb_host> <host>] [B<--host_vars> <vars>] [B<--use_roles> [01]]
+shell_var_reader B<-r> <file> [B<-o> <format>] [B<-p>] [B<-s>] [B<--tcmdb> <dir>] [B<--cmdb_host> <host>] [B<--host_vars> <vars>] [B<--use_roles> [01]] [B<-m> <munger>]
 
 =head1 FLAGS
 
@@ -285,6 +334,41 @@ Include Examples...
 
     Read in a.json and merge it, then read in in b.json and merge it.
     -i a.jsom -i b.toml
+
+=head1 MUNGING FLAGS
+
+=head2 -m <munger>
+
+File containing code to use for munging data prior to output. The file will be read in
+and ran via eval.
+
+The following are accessible and usable from with in it.
+
+    $found_Vars :: Hash reference containing the found variables with everything merged into it.
+    $format :: The output format to use.
+    $host_Vars :: The value of --host_vars .
+    @includes :: A array of containing the various values for -i .
+    $merger :: A Hash::Merge->new('RIGHT_PRECEDENT') object.
+    $munger_file :: The value of -m if specified.
+    $pretty :: If -p was specified or not.
+    $sort :: If -s was specified or not.
+    $tcmdb :: Path to the Rex TOML CMDB if specified.
+    $to_read :: The value of -r .
+    $use_roles :: The value of --use_rules .
+
+To lets say you wanted to delete the variable 'foo', you could do it like below.
+
+    delete($found_vars->{foo});
+
+Or if wanted to set .suricata.enable and a few others based on .SURICATA_INSTANCE_COUNT
+you could do it like below.
+
+    if ($found_vars->{SURICATA_INSTANCE_COUNT}) {
+        $found_vars->{suricata}{enable}=1;
+        $found_vars->{suricata_extract}{enable}=1;
+        $found_vars->{snmpd}{extends}{suricata}{enable}=1;
+        $found_vars->{snmpd}{extends}{suricata_extract}{enable}=1;
+    }
 
 =head1 CMDB FLAGS
 
