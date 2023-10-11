@@ -5,7 +5,7 @@ use warnings;
 use Shell::Var::Reader;
 use TOML         qw(to_toml from_toml);
 use JSON         qw(to_json decode_json);
-use YAML         qw(Load);
+use YAML::XS         qw(Load Dump);
 use Getopt::Long qw(:config pass_through);
 use Data::Dumper;
 use String::ShellQuote;
