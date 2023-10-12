@@ -32,6 +32,7 @@ if ($help) {
 	print 'cmdb_shell_var_reader v. ' . $version . '
 
 ';
+	exit 255;
 }
 
 if (!defined($action)) {

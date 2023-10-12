@@ -27,4 +27,3 @@ if [ "$SAGAN_COUNT" -ge 1 ]; then
     SAGAN_OR_SURICATA=1
 fi
 
-SYSTEM_NAME=$SYSTEM_NAME

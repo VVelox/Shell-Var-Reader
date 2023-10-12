@@ -10,7 +10,7 @@ use String::ShellQuote;
 
 =head1 NAME
 
-Shell::Var::Reader::CMDB - 
+Shell::Var::Reader::CMDB - Helper for creating and updating shell_var_reader based CMDB.
 
 =head1 VERSION
 
@@ -20,14 +20,12 @@ Version 0.1.0
 
 our $VERSION = '0.1.0';
 
-=head1 SYNOPSIS
-
-
 =head1 SUBROUTINES
 
 =head2 init
 
-Creates 
+Initiates a directory tree for creating a CMDB using shell_var_reader.
+with some very minor example stuff.
 
     Shell::Var::Reader::CMDB->init(
                                    dir=>'./foo/',
@@ -35,6 +33,20 @@ Creates
                                    verbose=>1,
                                    init_group_slug=>'example',
                                    );
+
+At the minimum 'dir' must be specified.
+
+    - dir :: Path to where to create it.
+        - Default :: undef.
+
+    - exists_okay :: If the directory already existing is okay.
+        - Default :: 1
+
+    - verbose :: If it should be verbose or not.
+        - Default :: 1
+
+    - init_group_slug :: Name of the example group dir.
+        - Default :: example
 
 =cut
 
@@ -124,8 +136,27 @@ sub init {
 		}
 	} ## end foreach my $share_file (@share_files)
 
+	# copy the example system into place
+	if ( $opts{init_group_slug} ne '' ) {
+		my $destination = $opts{dir} . '/' . $opts{init_group_slug} . '/example.foo.bar.sh';
+		my $source      = $share_dir . '/example_host.sh';
+		if ( !-e $destination ) {
+			if ( $opts{verbose} ) {
+				print 'copying "' . $source . '" to "' . $destination . '"' . "\n";
+			}
+			copy( $source, $destination ) || die( 'Failed to copy "' . $source . '" to "' . $destination . '"' );
+			if ( $opts{verbose} ) {
+				print 'copied "' . $source . '" to "' . $destination . '"' . "\n";
+			}
+		} else {
+			if ( $opts{verbose} ) {
+				print 'file "' . $destination . '" already exists' . "\n";
+			}
+		}
+	} ## end if ( $opts{init_group_slug} ne '' )
+
 	# touch files that should be empty but exist by default
-	my @empty_files = ( '.shell_var_reader', 'cmdb/default.toml' );
+	my @empty_files = ( '.shell_var_reader', 'cmdb/default.toml', 'munger.pl' );
 	foreach my $file (@empty_files) {
 		$file = $opts{dir} . '/' . $file;
 		if ( !-e $file ) {
@@ -179,6 +210,13 @@ Reads through the directory and process all relevant files.
                                    verbose=>1,
                                    );
 
+At the minimum 'dir' must be specified.
+
+    - dir :: Path to where to create it.
+        - Default :: undef.
+
+    - verbose :: If it should be verbose or not.
+        - Default :: 1
 
 =cut
 
@@ -213,11 +251,17 @@ sub update {
 				. '/.shell_var_reader" does not exist or is not a file' );
 	}
 
+	# figure out if it should use the munger or not
+	my $munger_option = '';
+	if ( -f $opts{dir} . '/munger.pl' ) {
+		$munger_option = '-m ' . shell_quote( $opts{dir} . '/munger.pl' );
+	}
+
 	# get a list of directories to process and start work on it
 	chdir( $opts{dir} );
 	my @system_groups = grep {
 			   -d $_
-			&& ! -f "$_/.not_a_system_group"
+			&& !-f "$_/.not_a_system_group"
 			&& $_ !~ /^\./
 			&& $_ ne 'json_confs'
 			&& $_ ne 'shell_confs'
@@ -226,40 +270,64 @@ sub update {
 			&& $_ ne 'cmdb'
 	} read_dir( $opts{dir} );
 	foreach my $sys_group (@system_groups) {
-		if ($opts{verbose}) {
-			print "Progressing group $sys_group ... \n";
+		if ( $opts{verbose} ) {
+			print "Processing group $sys_group ... \n";
 		}
 
-		my @systems_in_group = grep {
-			-f $sys_group.'/'.$_
-			&& $_ =~ /\.sh$/
-			&& $_ !~ /^\_/
-		} read_dir( $sys_group );
+		my @systems_in_group = grep { -f $sys_group . '/' . $_ && $_ =~ /\.sh$/ && $_ !~ /^\_/ } read_dir($sys_group);
 		chdir($sys_group);
 		foreach my $system (@systems_in_group) {
-			my $cmdb_host=$system;
-			$cmdb_host=~s/\.sh$//;
+			my $cmdb_host = $system;
+			$cmdb_host =~ s/\.sh$//;
 
-			if ($opts{verbose}) {
-				print $cmdb_host."\n";
+			if ( $opts{verbose} ) {
+				print $cmdb_host. "\n";
 			}
-			my $command='shell_var_reader -r '.shell_quote( $system ).' --tcmdb ../cmdb/ -s -p --cmdb_host '. shell_quote( $cmdb_host ). ' -o json > ../json_confs/'. shell_quote( $cmdb_host ).'.json';
+			my $command
+				= 'shell_var_reader -r '
+				. shell_quote($system)
+				. ' --tcmdb ../cmdb/ -s -p --cmdb_host '
+				. shell_quote($cmdb_host) . ' '
+				. $munger_option
+				. ' -o json > ../json_confs/'
+				. shell_quote($cmdb_host) . '.json';
 			print `$command`;
 
-			$command='shell_var_reader -r '.shell_quote( $system ).' --tcmdb ../cmdb/ -s -p --cmdb_host '. shell_quote( $cmdb_host ). ' -o yaml > ../yaml_confs/'. shell_quote( $cmdb_host ).'.yaml';
+			$command
+				= 'shell_var_reader -r '
+				. shell_quote($system)
+				. ' --tcmdb ../cmdb/ -s -p --cmdb_host '
+				. shell_quote($cmdb_host) . ' '
+				. $munger_option
+				. ' -o yaml > ../yaml_confs/'
+				. shell_quote($cmdb_host) . '.yaml';
 			print `$command`;
 
-			$command='shell_var_reader -r '.shell_quote( $system ).' --tcmdb ../cmdb/ -s -p --cmdb_host '. shell_quote( $cmdb_host ). ' -o toml > ../toml_confs/'. shell_quote( $cmdb_host ).'.yaml';
+			$command
+				= 'shell_var_reader -r '
+				. shell_quote($system)
+				. ' --tcmdb ../cmdb/ -s -p --cmdb_host '
+				. shell_quote($cmdb_host) . ' '
+				. $munger_option
+				. ' -o toml > ../toml_confs/'
+				. shell_quote($cmdb_host) . '.yaml';
 			print `$command`;
 
-			$command='shell_var_reader -r '.shell_quote( $system ).' --tcmdb ../cmdb/ -s -p --cmdb_host '. shell_quote( $cmdb_host ). ' -o shell > ../shell_confs/'. shell_quote( $cmdb_host ).'.sh';
+			$command
+				= 'shell_var_reader -r '
+				. shell_quote($system)
+				. ' --tcmdb ../cmdb/ -s -p --cmdb_host '
+				. shell_quote($cmdb_host) . ' '
+				. $munger_option
+				. ' -o shell > ../shell_confs/'
+				. shell_quote($cmdb_host) . '.sh';
 			print `$command`;
-		}
-		if ($opts{verbose}) {
+		} ## end foreach my $system (@systems_in_group)
+		if ( $opts{verbose} ) {
 			print "\n\n";
 		}
 		chdir('..');
-	}
+	} ## end foreach my $sys_group (@system_groups)
 } ## end sub update
 
 =head1 AUTHOR
