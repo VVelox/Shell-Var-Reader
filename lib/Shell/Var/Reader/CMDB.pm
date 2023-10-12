@@ -172,7 +172,7 @@ SYSTEM_GROUP=' . $opts{init_group_slug} . '
 
 =head2 update
 
-Creates 
+Reads through the directory and process all relevant files.
 
     Shell::Var::Reader::CMDB->update(
                                    dir=>'./foo/',
