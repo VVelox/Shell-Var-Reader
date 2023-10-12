@@ -2,6 +2,9 @@ use 5.006;
 use strict;
 use warnings;
 use ExtUtils::MakeMaker;
+use File::ShareDir::Install;
+
+install_share 'share';
 
 my %WriteMakefileArgs = (
 	NAME               => 'Shell::Var::Reader',
@@ -10,7 +13,7 @@ my %WriteMakefileArgs = (
 	ABSTRACT_FROM      => 'lib/Shell/Var/Reader.pm',
 	LICENSE            => 'artistic_2',
 	INST_SCRIPT        => 'bin',
-	EXE_FILES          => ['src_bin/shell_var_reader'],
+	EXE_FILES          => [ 'src_bin/shell_var_reader', 'src_bin/cmdb_shell_var_reader' ],
 	MIN_PERL_VERSION   => '5.006',
 	CONFIGURE_REQUIRES => {
 		'ExtUtils::MakeMaker' => '0',
@@ -65,3 +68,6 @@ delete $WriteMakefileArgs{LICENSE}
 	unless eval { ExtUtils::MakeMaker->VERSION('6.31'); 1 };
 
 WriteMakefile(%WriteMakefileArgs);
+
+package MY;
+use File::ShareDir::Install qw(postamble);

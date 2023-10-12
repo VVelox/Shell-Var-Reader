@@ -1,0 +1,59 @@
+#!perl
+
+use strict;
+use warnings;
+use Shell::Var::Reader::CMDB;
+use Getopt::Long qw(:config pass_through);
+
+my $version = '0.1.0';
+
+my $action;
+my $version_flag;
+my $help;
+my $dir;
+my $exists_okay;
+my $verbose;
+my $init_group_slug;
+
+GetOptions(
+		   'a=s'=>\$action,
+		   'd=s'=>\$dir,
+		   'eo=s'=>\$exists_okay,
+		   'verbose=s'=>\$verbose,
+		   'group=s'=>\$init_group_slug,
+		   );
+
+if ($version_flag) {
+        print 'cmdb_shell_var_reader v. ' . $version . "\n";
+        exit 255;
+}
+
+if ($help) {
+	print 'cmdb_shell_var_reader v. ' . $version . '
+
+';
+}
+
+if (!defined($action)) {
+	die('Nothing specified for -a');
+}
+
+if ($action eq 'init') {
+	Shell::Var::Reader::CMDB->init(
+								   dir=>$dir,
+                                   exists_okay=>$exists_okay,
+                                   verbose=>$verbose,
+                                   init_group_slug=>$init_group_slug,
+								   );
+	exit 0;
+}
+
+if ($action eq 'update') {
+	Shell::Var::Reader::CMDB->update(
+								   dir=>$dir,
+                                   verbose=>$verbose,
+								   );
+	exit 0;
+}
+
+die('"'.$action.'" is not a known action');
