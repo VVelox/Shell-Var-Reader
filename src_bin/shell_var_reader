@@ -236,6 +236,10 @@ if ( defined($tcmdb) ) {
 
 	my %tmp_hash = %{ $merger->merge( $found_vars, $cmdb_vars ) };
 	$found_vars = \%tmp_hash;
+
+	if ( defined($cmdb_host) && !defined( $found_vars->{SYSTEM_NAME} ) ) {
+		$found_vars->{SYSTEM_NAME} = $cmdb_host;
+	}
 } ## end if ( defined($tcmdb) )
 
 ##
