@@ -16,7 +16,8 @@ my %WriteMakefileArgs = (
 	EXE_FILES          => [ 'src_bin/shell_var_reader', 'src_bin/cmdb_shell_var_reader' ],
 	MIN_PERL_VERSION   => '5.006',
 	CONFIGURE_REQUIRES => {
-		'ExtUtils::MakeMaker' => '0',
+		'ExtUtils::MakeMaker'     => '0',
+		'File::ShareDir::Install' => '0',
 	},
 	TEST_REQUIRES => {
 		'Test::More' => '0',

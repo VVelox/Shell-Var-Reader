@@ -330,6 +330,32 @@ sub update {
 	} ## end foreach my $sys_group (@system_groups)
 } ## end sub update
 
+=head1 LAYOUT & WORKFLOW
+
+Specifically named files.
+
+    - .shell_var_reader :: Marks the base directory as being for a shell_var_reader CMDB.
+
+Specifically named directories.
+
+    - cmdb :: The TOML CMDB directory.
+    - json_confs :: Generated JSON confs.
+    - shell_confs :: Generated shell confs.
+    - toml_confs :: Generated TOML confs.
+    - yaml_confs :: Generated YAML confs.
+
+Other directories that that don't start with a '.' or contiain a file named '.not_a_system_group'
+will be processed as system groups.
+
+These directories will be searched for files directly below them for files ending in '.sh' and not
+starting with either a '_' or a '.'. The name used for a system is the name of the file minus the ending
+'.sh', so 'foo.bar.sh' would generate a config for a system named 'foo.bar'.
+
+When it finds a file to use as a system config, it will point shell_var_reader at it with TOML CMDB enabled
+and with the name of that system set the hostname to use with the TOML CMDB. That name will also be saved as
+the variable 'SYSTEM_NAME', provided that variable is not defined already. If a 'munger.pl' exists, that file
+is used as the munger file. shell_var_reader will be ran four times, once to generate each config type.
+
 =head1 AUTHOR
 
 Zane C. Bowers-Hadley, C<< <vvelox at vvelox.net> >>
@@ -339,9 +365,6 @@ Zane C. Bowers-Hadley, C<< <vvelox at vvelox.net> >>
 Please report any bugs or feature requests to C<bug-shell-var-reader at rt.cpan.org>, or through
 the web interface at L<https://rt.cpan.org/NoAuth/ReportBug.html?Queue=Shell-Var-Reader>.  I will be notified, and then you'll
 automatically be notified of progress on your bug as I make changes.
-
-
-
 
 =head1 SUPPORT
 
