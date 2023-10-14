@@ -14,11 +14,11 @@ Shell::Var::Reader::CMDB - Helper for creating and updating shell_var_reader bas
 
 =head1 VERSION
 
-Version 0.1.0
+Version 0.1.1
 
 =cut
 
-our $VERSION = '0.1.0';
+our $VERSION = '0.1.1';
 
 =head1 SUBROUTINES
 
@@ -254,7 +254,7 @@ sub update {
 	# figure out if it should use the munger or not
 	my $munger_option = '';
 	if ( -f $opts{dir} . '/munger.pl' ) {
-		$munger_option = '-m ' . shell_quote( $opts{dir} . '/munger.pl' );
+		$munger_option = '-m ../munger.pl';
 	}
 
 	# get a list of directories to process and start work on it

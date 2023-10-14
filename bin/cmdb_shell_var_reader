@@ -5,7 +5,7 @@ use warnings;
 use Shell::Var::Reader::CMDB;
 use Getopt::Long qw(:config pass_through);
 
-my $version = '0.1.0';
+my $version = '0.1.1';
 
 my $action;
 my $version_flag;
@@ -21,6 +21,8 @@ GetOptions(
 		   'eo=s'=>\$exists_okay,
 		   'verbose=s'=>\$verbose,
 		   'group=s'=>\$init_group_slug,
+		   'version' => \$version_flag,
+		   'help' => \$help,
 		   );
 
 if ($version_flag) {

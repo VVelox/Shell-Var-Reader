@@ -16,7 +16,6 @@ in `starting_include.sh`.
 
 | Variable                        | Type         | Default            | Description                                                                                                                   |
 |---------------------------------|--------------|--------------------|-------------------------------------------------------------------------------------------------------------------------------|
-| CLIENT                          | String       | undef              | Client slug for sensor names etc.                                                                                             |
 | CLEAN_TO                        | Int          | 88                 | Percentage to use with file_cleaner_by_du                                                                                     |
 | NO_MEER_CS                      | Bool         | 0                  | If enabled, no Meer client stats stuff is done.                                                                               |
 | SAGAN_INSTANCES                 | String Array | ""                 | Sagan instance running on the system.                                                                                         |

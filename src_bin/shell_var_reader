@@ -257,7 +257,7 @@ if ( defined($munger_file) ) {
 	eval {
 		$munger = read_file($munger_file);
 		if ( !defined($munger) ) {
-			die( 'rea_file("' . $munger_file . '") returned undef' );
+			die( 'read_file("' . $munger_file . '") returned undef' );
 		}
 	};
 	if ($@) {
