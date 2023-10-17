@@ -14,11 +14,11 @@ Shell::Var::Reader::CMDB - Helper for creating and updating shell_var_reader bas
 
 =head1 VERSION
 
-Version 0.1.1
+Version 0.1.2
 
 =cut
 
-our $VERSION = '0.1.1';
+our $VERSION = '0.1.2';
 
 =head1 SUBROUTINES
 
@@ -310,7 +310,7 @@ sub update {
 				. shell_quote($cmdb_host) . ' '
 				. $munger_option
 				. ' -o toml > ../toml_confs/'
-				. shell_quote($cmdb_host) . '.yaml';
+				. shell_quote($cmdb_host) . '.toml';
 			print `$command`;
 
 			$command
