@@ -15,6 +15,7 @@ use JSON::Path;
 use Rex::CMDB;
 use Rex -feature => [qw/1.4/];
 use Hash::Flatten;
+use Pod::Usage;
 
 # prevents Rex from printing out rex is exiting after the script ends
 $::QUIET = 2;
@@ -60,44 +61,9 @@ if ($version_flag) {
 }
 
 if ($help) {
-	print 'shell_var_reader v. ' . $version . '
+	print 'shell_var_reader v. ' . $version . "\n\n";
 
--r <file>     File to read/run
--o <format>   Output formats
-              Default: json
-              Formats: json,yaml,toml,dumper(Data::Dumper),shell
--p            Pretty print
--s            Sort
--i <include>  Include file info. May be used multiple times.
--m <munger>   File containing code to use for munging data prior to output.
-
---tcmdb <dir>       Optionally include data from a Rex TOML CMDB.
---cmdb_env <env>    Environment name to use with the CMDB.
-                    Default :: undef
---env_var <vars>    If --cmdb_env is undef, check this comma seperated
-                    list JSON Paths in the currently found/included vars
-                    for the first possible hit.
-                    Default :: SYSTEM_ENV
---cmdb_host <host>  Hostname to use when querying the CMDB.
-                    Default :: undef
---host_vars <vars>  If --cmdb_host is undef, check this comma seperated
-                    list JSON Paths in the currently found/included vars
-                    for the first possible hit.
-                    Default :: HOSTNAME,REX_NAME,REX_HOSTNAME,ANSIBLE_HOSTNAME,ANSIBLE_NAME,NAME
---use_roles [01]    If roles should be used or not with the Rex TOML CMDB.
-                    Default :: 1
-
--h/--help     Help
--v/--version  Version
-
-
-Include Examples...
--i foo,bar.json       Read in bar.json and include it as the variable foo.
--i foo.toml           Read in foo.toml and merge it with what it is being merged into taking presidence.
--i a.jsom -i b.toml   Read in a.json and merge it, then read in in b.json and merge it.
-
-';
-	exit 255;
+	pod2usage( -exitval => 255, -verbose => 2, -output => \*STDOUT );
 } ## end if ($help)
 
 if ( !defined($to_read) ) {
