@@ -2,9 +2,6 @@ use 5.006;
 use strict;
 use warnings;
 use ExtUtils::MakeMaker;
-use File::ShareDir::Install;
-
-install_share 'share';
 
 my %WriteMakefileArgs = (
 	NAME               => 'Shell::Var::Reader',
@@ -35,7 +32,6 @@ my %WriteMakefileArgs = (
 		'JSON::Path'         => '1.0.3',
 		'Hash::Flatten'      => '0',
 		'File::Slurp'        => '0',
-		'File::ShareDir'     => '0',
 	},
 	dist       => { COMPRESS => 'gzip -9f', SUFFIX => 'gz', },
 	clean      => { FILES    => 'Shell-Var-Reader-*' },
@@ -71,6 +67,3 @@ delete $WriteMakefileArgs{LICENSE}
 	unless eval { ExtUtils::MakeMaker->VERSION('6.31'); 1 };
 
 WriteMakefile(%WriteMakefileArgs);
-
-package MY;
-use File::ShareDir::Install qw(postamble);
