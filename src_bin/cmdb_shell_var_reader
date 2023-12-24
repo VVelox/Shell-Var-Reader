@@ -5,7 +5,7 @@ use warnings;
 use Shell::Var::Reader::CMDB;
 use Getopt::Long qw(:config pass_through);
 
-my $version = '0.1.1';
+my $version = $Shell::Var::Reader::CMDB::VERSION;
 
 my $action;
 my $version_flag;
@@ -16,71 +16,45 @@ my $verbose;
 my $init_group_slug;
 
 GetOptions(
-		   'a=s'=>\$action,
-		   'd=s'=>\$dir,
-		   'eo=s'=>\$exists_okay,
-		   'verbose=s'=>\$verbose,
-		   'group=s'=>\$init_group_slug,
-		   'version' => \$version_flag,
-		   'help' => \$help,
-		   );
+	'a=s'       => \$action,
+	'd=s'       => \$dir,
+	'eo=s'      => \$exists_okay,
+	'verbose=s' => \$verbose,
+	'group=s'   => \$init_group_slug,
+	'version'   => \$version_flag,
+	'help'      => \$help,
+);
 
 if ($version_flag) {
-        print 'cmdb_shell_var_reader v. ' . $version . "\n";
-        exit 255;
+	print 'cmdb_shell_var_reader v. ' . $version . "\n";
+	exit 255;
 }
 
 if ($help) {
 	print 'cmdb_shell_var_reader v. ' . $version . '
-
-
--a <action>       The action to perform.
-                  Default :: undef
 
 --verbose <0/1>   A boolean value for if it should be verbose or not.
                   Default :: 1
 
 -d <dir>          The directory to operate on.
                   Default :: undef
-
---eo <0/1>        If it is okay if stuff already exists when doing the init
-                  action. This just means it wont die if the directory
-                  already exists. It wont overwrite anything.
-                  Default :: 1
-
---group <group>   The name to use example system group to use for with the init action.
-                  Default :: example
-
-ACTIONS
-init :: Creates the directory structure and files it with some example files.
-update :: Looks for system group directories and processes each system config found under it.
 ';
 	exit 255;
-}
+} ## end if ($help)
 
-if (!defined($action)) {
+if ( !defined($action) ) {
 	die('Nothing specified for -a');
 }
 
-if ($action eq 'init') {
-	Shell::Var::Reader::CMDB->init(
-								   dir=>$dir,
-                                   exists_okay=>$exists_okay,
-                                   verbose=>$verbose,
-                                   init_group_slug=>$init_group_slug,
-								   );
-	exit 0;
-}
-
-if ($action eq 'update') {
+if ( $action eq 'update' ) {
 	Shell::Var::Reader::CMDB->update(
-								   dir=>$dir,
-                                   verbose=>$verbose,
-								   );
+		dir     => $dir,
+		verbose => $verbose,
+	);
 	exit 0;
 }
 
-die('"'.$action.'" is not a known action');
+die( '"' . $action . '" is not a known action' );
 
 =head1 NAME
 
@@ -88,15 +62,7 @@ shell_var_reader - Read/run a shell script and return set variable in it.
 
 =head1 SYNOPSIS
 
-
-
 =head1 FLAGS
-
-=head2 -a <action>
-
-The action to perform.
-
-Default :: undef
 
 =head2 --verbose <0/1>
 
@@ -107,29 +73,6 @@ Default :: 1
 =head2 -d <dir>
 
 The directory to operate on.
-
-=head2 --eo <0/1>
-
-If it is okay if stuff already exists when doing the init
-action. This just means it won't die if the directory
-already exists. It won't overwrite anything.
-
-=head2 --group <group>
-
-The name to use example system group to use for with
-the init action.
-
-Default :: example
-
-=head1 ACTIONS
-
-=head2 init
-
-Creates the directory structure and files it with some example files.
-
-=head2 update
-
-Looks for system group directories and processes each system config found under it.
 
 =head1 LAYOUT & WORKFLOW
 
