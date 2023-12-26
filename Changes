@@ -1,5 +1,11 @@
 Revision history for Shell-Var-Reader
 
+0.7.0	 2023-12-26/13:00
+		 - Now use TOML::Tiny.
+		 - Remove the init stuff.
+		 - Add support for other CMDB types besides TOML.
+		 - cmdb_shell_var_reader will not tryt o autofind the dir based off of the .shell_var_reader file.
+
 0.6.0	 2023-11-15/15:45
 		 - Add multiout to shell_var_reader.
 
