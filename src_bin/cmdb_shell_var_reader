@@ -34,24 +34,24 @@ if ($help) {
 	pod2usage( -exitval => 255, -verbose => 2, -output => \*STDOUT );
 }
 
-if (!defined($dir)) {
-	if (-f './.shell_var_reader') {
-		$dir='./';
-	}elsif (-f '../.shell_var_reader') {
-		$dir='../';
-	}elsif (-f '../../.shell_var_reader') {
-		$dir='../../';
-	}elsif (-f '../../../.shell_var_reader') {
-		$dir='../../../';
-	}elsif (-f '../../../../.shell_var_reader') {
-		$dir='../../../../';
+if ( !defined($dir) ) {
+	if ( -f './.shell_var_reader' ) {
+		$dir = './';
+	} elsif ( -f '../.shell_var_reader' ) {
+		$dir = '../';
+	} elsif ( -f '../../.shell_var_reader' ) {
+		$dir = '../../';
+	} elsif ( -f '../../../.shell_var_reader' ) {
+		$dir = '../../../';
+	} elsif ( -f '../../../../.shell_var_reader' ) {
+		$dir = '../../../../';
 	}
-}
+} ## end if ( !defined($dir) )
 
 Shell::Var::Reader::CMDB->update(
-								 dir     => $dir,
-								 verbose => $verbose,
-								 );
+	dir     => $dir,
+	verbose => $verbose,
+);
 exit 0;
 
 =head1 NAME

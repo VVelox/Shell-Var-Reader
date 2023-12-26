@@ -31,13 +31,22 @@ Reads through the directory and process all relevant files.
                                    verbose=>1,
                                    );
 
-At the minimum 'dir' must be specified.
+The following options are available.
 
     - dir :: Path to where to create it.
         - Default :: undef.
 
     - verbose :: If it should be verbose or not.
         - Default :: 1
+
+If dir undef, it will check the following
+directories for the file '.shell_var_reader'.
+
+  ./
+  ../
+  ../../
+  ../../../
+  ../../../../
 
 =cut
 
@@ -58,7 +67,17 @@ sub update {
 
 	# handle checking if the dir already exists and deciding what to do if it already does
 	if ( !defined( $opts{dir} ) ) {
-		die('$opts{dir} is undef');
+		if ( -f './.shell_var_reader' ) {
+			$opts{dir} = './';
+		} elsif ( -f '../.shell_var_reader' ) {
+			$opts{dir} = '../';
+		} elsif ( -f '../../.shell_var_reader' ) {
+			$opts{dir} = '../../';
+		} elsif ( -f '../../../.shell_var_reader' ) {
+			$opts{dir} = '../../../';
+		} elsif ( -f '../../../../.shell_var_reader' ) {
+			$opts{dir} = '../../../../';
+		}
 	} else {
 		if ( !-d $opts{dir} ) {
 			die( '"' . $opts{dir} . '" does not exist or is not a directory' );

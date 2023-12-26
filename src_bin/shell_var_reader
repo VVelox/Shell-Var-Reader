@@ -3,7 +3,7 @@
 use strict;
 use warnings;
 use Shell::Var::Reader;
-use TOML         qw(to_toml from_toml);
+use TOML::Tiny   qw(to_toml from_toml);
 use JSON         qw(to_json decode_json);
 use YAML::XS     qw(Load Dump);
 use Getopt::Long qw(:config pass_through);
@@ -184,13 +184,13 @@ if ( defined($tcmdb) ) {
 		}
 	} ## end if ( !defined($cmdb_host) )
 
-	my $cmdb_type='toml';
-	if (-f $tcmdb.'/.cmdb_type') {
-		my @cmdb_type_split=grep(!/^[\t\ ]*$/,grep(!/^#/,split(/\n/, read_file($tcmdb.'/.cmdb_type'))));
-		if (!defined($cmdb_type_split[0])) {
-			die($tcmdb.'/.cmdb_type exists but is empty');
+	my $cmdb_type = 'toml';
+	if ( -f $tcmdb . '/.cmdb_type' ) {
+		my @cmdb_type_split = grep( !/^[\t\ ]*$/, grep( !/^#/, split( /\n/, read_file( $tcmdb . '/.cmdb_type' ) ) ) );
+		if ( !defined( $cmdb_type_split[0] ) ) {
+			die( $tcmdb . '/.cmdb_type exists but is empty' );
 		}
-		$cmdb_type=$cmdb_type_split[0];
+		$cmdb_type = $cmdb_type_split[0];
 	}
 
 	# try to get the cmdb env if possible

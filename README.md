@@ -168,7 +168,14 @@ outputing it in a desired format.
        Default :: 1
 
    -d <dir>
-       The directory to operate on.
+       The directory to operate on. If undef, it will check the following
+       directories for the file '.shell_var_reader'.
+
+         ./
+         ../
+         ../../
+         ../../../
+         ../../../../
 ```
 
 ### shell_var_reader CMDB layout
