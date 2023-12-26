@@ -17,7 +17,6 @@ my $verbose;
 my $init_group_slug;
 
 GetOptions(
-	'a=s'       => \$action,
 	'd=s'       => \$dir,
 	'eo=s'      => \$exists_okay,
 	'verbose=s' => \$verbose,
@@ -35,19 +34,25 @@ if ($help) {
 	pod2usage( -exitval => 255, -verbose => 2, -output => \*STDOUT );
 }
 
-if ( !defined($action) ) {
-	die('Nothing specified for -a');
+if (!defined($dir)) {
+	if (-f './.shell_var_reader') {
+		$dir='./';
+	}elsif (-f '../.shell_var_reader') {
+		$dir='../';
+	}elsif (-f '../../.shell_var_reader') {
+		$dir='../../';
+	}elsif (-f '../../../.shell_var_reader') {
+		$dir='../../../';
+	}elsif (-f '../../../../.shell_var_reader') {
+		$dir='../../../../';
+	}
 }
 
-if ( $action eq 'update' ) {
-	Shell::Var::Reader::CMDB->update(
-		dir     => $dir,
-		verbose => $verbose,
-	);
-	exit 0;
-}
-
-die( '"' . $action . '" is not a known action' );
+Shell::Var::Reader::CMDB->update(
+								 dir     => $dir,
+								 verbose => $verbose,
+								 );
+exit 0;
 
 =head1 NAME
 
@@ -65,7 +70,14 @@ Default :: 1
 
 =head2 -d <dir>
 
-The directory to operate on.
+The directory to operate on. If undef, it will check the following
+directories for the file '.shell_var_reader'.
+
+  ./
+  ../
+  ../../
+  ../../../
+  ../../../../
 
 =head1 LAYOUT & WORKFLOW
 
