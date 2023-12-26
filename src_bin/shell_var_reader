@@ -20,7 +20,7 @@ use Pod::Usage;
 # prevents Rex from printing out rex is exiting after the script ends
 $::QUIET = 2;
 
-my $version = '0.7.0';
+my $version = $Shell::Var::Reader::VERSION;
 
 my $to_read;
 my $format = 'json';
