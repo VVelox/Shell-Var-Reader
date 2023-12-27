@@ -56,7 +56,7 @@ exit 0;
 
 =head1 NAME
 
-shell_var_reader - Read/run a shell script and return set variable in it.
+cmdb_shell_var_reader - Bulk run shell_var_reader for CMDB build purposes.
 
 =head1 SYNOPSIS
 
