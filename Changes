@@ -1,5 +1,8 @@
 Revision history for Shell-Var-Reader
 
+0.7.1	 2023-12-27/11:30
+		 - Fix cmdb_shell_var_reader POD.
+
 0.7.0	 2023-12-26/13:00
 		 - Now use TOML::Tiny.
 		 - Remove the init stuff.
