@@ -184,7 +184,7 @@ if ( defined($tcmdb) ) {
 		}
 	} ## end if ( !defined($cmdb_host) )
 
-	my $cmdb_type = 'toml';
+	my $cmdb_type = 'TOML';
 	if ( -f $tcmdb . '/.cmdb_type' ) {
 		my @cmdb_type_split = grep( !/^[\t\ ]*$/, grep( !/^#/, split( /\n/, read_file( $tcmdb . '/.cmdb_type' ) ) ) );
 		if ( !defined( $cmdb_type_split[0] ) ) {
