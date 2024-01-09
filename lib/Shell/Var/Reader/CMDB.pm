@@ -14,11 +14,11 @@ Shell::Var::Reader::CMDB - Helper for updating shell_var_reader based CMDBs.
 
 =head1 VERSION
 
-Version 0.2.0
+Version 0.3.0
 
 =cut
 
-our $VERSION = '0.2.0';
+our $VERSION = '0.3.0';
 
 =head1 SUBROUTINES
 
@@ -109,14 +109,14 @@ sub update {
 			&& $_ ne 'yaml_confs'
 			&& $_ ne 'cmdb'
 	} read_dir( $opts{dir} );
-	foreach my $sys_group (@system_groups) {
+	foreach my $sys_group (sort(@system_groups)) {
 		if ( $opts{verbose} ) {
 			print "Processing group $sys_group ... \n";
 		}
 
 		my @systems_in_group = grep { -f $sys_group . '/' . $_ && $_ =~ /\.sh$/ && $_ !~ /^\_/ } read_dir($sys_group);
 		chdir($sys_group);
-		foreach my $system (@systems_in_group) {
+		foreach my $system (sort(@systems_in_group)) {
 			my $cmdb_host = $system;
 			$cmdb_host =~ s/\.sh$//;
 
