@@ -3,7 +3,6 @@ package Shell::Var::Reader::CMDB;
 use 5.006;
 use strict;
 use warnings;
-use File::ShareDir ":ALL";
 use File::Slurp qw(read_dir write_file read_dir);
 use File::Copy;
 use String::ShellQuote;
@@ -109,14 +108,14 @@ sub update {
 			&& $_ ne 'yaml_confs'
 			&& $_ ne 'cmdb'
 	} read_dir( $opts{dir} );
-	foreach my $sys_group (sort(@system_groups)) {
+	foreach my $sys_group ( sort(@system_groups) ) {
 		if ( $opts{verbose} ) {
 			print "Processing group $sys_group ... \n";
 		}
 
 		my @systems_in_group = grep { -f $sys_group . '/' . $_ && $_ =~ /\.sh$/ && $_ !~ /^\_/ } read_dir($sys_group);
 		chdir($sys_group);
-		foreach my $system (sort(@systems_in_group)) {
+		foreach my $system ( sort(@systems_in_group) ) {
 			my $cmdb_host = $system;
 			$cmdb_host =~ s/\.sh$//;
 
@@ -132,12 +131,12 @@ sub update {
 				. ' -o multi -d ../';
 			print `$command`;
 
-		} ## end foreach my $system (@systems_in_group)
+		} ## end foreach my $system ( sort(@systems_in_group) )
 		if ( $opts{verbose} ) {
 			print "\n\n";
 		}
 		chdir('..');
-	} ## end foreach my $sys_group (@system_groups)
+	} ## end foreach my $sys_group ( sort(@system_groups) )
 } ## end sub update
 
 =head1 LAYOUT & WORKFLOW

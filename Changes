@@ -1,5 +1,8 @@
 Revision history for Shell-Var-Reader
 
+0.8.1   2024-01-14/18:00
+		 - Remove a requirement for a no longer used requirement.
+
 0.8.0   2024-01-09/22:45
 		 - sort system groups and systems for cmdb_shell_var_reader
 
