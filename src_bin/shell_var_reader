@@ -356,6 +356,7 @@ if ( $format eq 'toml' ) {
 			$munged_key =~ s/$escape//g;
 			$to_write = $to_write . $munged_key . '=' . shell_quote( $found_vars->{$key} ) . "\n";
 		}
+		write_file( $output_file, $to_write );
 	};
 	if ($@) {
 		die( 'Failed to write out "' . $output_file . '"... ' . $@ );
