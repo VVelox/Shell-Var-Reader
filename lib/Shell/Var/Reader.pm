@@ -11,11 +11,11 @@ Shell::Var::Reader - Runs a sh or bash script and returns the variables that hav
 
 =head1 VERSION
 
-Version 0.8.1
+Version 0.8.2
 
 =cut
 
-our $VERSION = '0.8.1';
+our $VERSION = '0.8.2';
 
 =head1 SYNOPSIS
 

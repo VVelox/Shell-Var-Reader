@@ -1,5 +1,8 @@
 Revision history for Shell-Var-Reader
 
+0.8.2   2024-01-26/09:30
+		 - \- in the found keys are replaced with \_\_
+
 0.8.1   2024-01-14/18:00
 		 - Remove a requirement for a no longer used requirement.
 

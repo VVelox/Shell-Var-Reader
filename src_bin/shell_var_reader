@@ -326,7 +326,6 @@ if ( $format eq 'toml' ) {
 	eval {
 		write_file(
 			$output_file, JSON->new->canonical(1)->pretty(1)->encode($found_vars)
-
 		);
 
 		$output_file = $output_dir . '/toml_confs/' . $cmdb_host . '.toml';
