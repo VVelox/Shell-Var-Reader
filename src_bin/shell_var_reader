@@ -318,6 +318,7 @@ if ( $format eq 'toml' ) {
 	foreach my $key (@keys) {
 		my $munged_key = $key;
 		$munged_key =~ s/$escape//g;
+		$munged_key =~ s/\-/\_\_/g;
 		print $munged_key . '=' . shell_quote( $found_vars->{$key} ) . "\n";
 	}
 } elsif ( $format eq 'multi' ) {
