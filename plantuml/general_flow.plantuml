@@ -1,0 +1,20 @@
+@startuml
+hide empty description
+shell_conf : ./$group/$system.sh
+shell_conf : ran under ./$group/
+shell_conf :
+shell_conf : Dirs matching ./$dir/.not_a_system_group are ignored.
+shell_conf --> CMDB
+CMDB:  Rex CMDB under ./cmdb
+CMDB: Settable via ./cmdb/.cmdb_type
+CMDB -> CMDB_YAMLwithRoles
+CMDB_YAMLwithRoles : cmdb/{$system}.yaml
+CMDB_YAMLwithRoles : cmdb/default.yaml
+CMDB_YAMLwithRoles -> CMDB_YAMLwithRoles_Roles
+CMDB_YAMLwithRoles_Roles : .roles variable read and roles/$role.yaml merged in
+CMDB --> munger
+munger :  $found_vars hash ref
+munger : Any changes to it will be reflected in the generated output.
+munger --> end
+end : write file(s)
+@enduml
