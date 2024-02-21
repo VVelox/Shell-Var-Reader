@@ -16,5 +16,14 @@ CMDB --> munger
 munger :  $found_vars hash ref
 munger : Any changes to it will be reflected in the generated output.
 munger --> end
-end : write file(s)
+end : write file
+end -> SHELL
+SHELL : ./shell_confs/$system.sh
+SHELL : Flattened via Hash::Flatten
+SHELL -> JSON
+JSON : ./json_confs/$system.json
+JSON -> YAML
+YAML : ./yaml_confs/$system.yaml
+YAML -> TOML
+TOML : ./toml_confs/$system.toml
 @enduml
