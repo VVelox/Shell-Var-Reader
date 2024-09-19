@@ -13,11 +13,11 @@ Shell::Var::Reader::CMDB - Helper for updating shell_var_reader based CMDBs.
 
 =head1 VERSION
 
-Version 0.4.0
+Version 0.5.0
 
 =cut
 
-our $VERSION = '0.4.0';
+our $VERSION = '0.5.0';
 
 =head1 SUBROUTINES
 
@@ -249,6 +249,8 @@ Specifically named directories.
 
 Other directories that that don't start with a '.' or contiain a file named '.not_a_system_group'
 will be processed as system groups.
+
+TOML will be skipped if .no_toml exists in the base directory.
 
 These directories will be searched for files directly below them for files ending in '.sh' and not
 starting with either a '_' or a '.'. The name used for a system is the name of the file minus the ending
