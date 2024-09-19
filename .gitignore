@@ -36,3 +36,4 @@ inc/
 /*.zip
 bin/shell_var_reader
 bin/cmdb_shell_var_reader
+bin/.exists
