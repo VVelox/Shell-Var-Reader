@@ -160,6 +160,12 @@ sub update {
 		$munger_option = '-m ../munger.pl';
 	}
 
+	#
+	my $no_toml='';
+	if ( -f $opts{dir} . '/.no_toml' ) {
+		$no_toml = '--no_toml';
+	}
+
 	# get a list of directories to process and start work on it
 	chdir( $opts{dir} );
 	my @system_groups = grep {
@@ -204,6 +210,7 @@ sub update {
 						. shell_quote($system)
 						. ' --tcmdb ../cmdb/ -s -p --cmdb_host '
 						. shell_quote($cmdb_host) . ' '
+						. $no_toml . ' '
 						. $munger_option
 						. ' -o multi -d ../';
 					print `$command`;
